@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VARIS CRM</title>
+<style>
+  :root{
+    --bg:#0a0a0f; --panel:#12121a; --panel2:#191924; --line:#26263a;
+    --text:#eaeaf2; --muted:#8b8ba3; --mag:#ff2d78; --cyan:#22d3ee;
+    --grad:linear-gradient(135deg,#ff2d78,#22d3ee);
+    --ok:#34d399; --warn:#fbbf24; --hold:#a78bfa;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Noto Sans KR",sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 20px}
+  header{position:sticky;top:0;z-index:20;background:rgba(10,10,15,.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .hd{display:flex;align-items:center;gap:16px;height:64px}
+  .logo{font-weight:800;letter-spacing:1px;font-size:18px;display:flex;align-items:center;gap:8px}
+  .logo .mk{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;font-size:20px}
+  .logo small{font-weight:600;color:var(--muted);letter-spacing:3px;font-size:11px;margin-left:2px}
+  .nav{display:flex;gap:4px;margin-left:14px}
+  .nav button{background:transparent;border:none;color:var(--muted);font-size:14px;font-weight:700;padding:8px 12px;border-radius:9px;cursor:pointer}
+  .nav button.on{color:var(--text);background:var(--panel2)}
+  .spacer{flex:1}
+  .btn{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:9px 14px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;transition:.15s;white-space:nowrap}
+  .btn:hover{border-color:var(--mag)}
+  .btn.primary{background:var(--grad);border:none;color:#0a0a0f}
+  .btn.ghost{background:transparent}
+  main{padding:24px 0 80px}
+  .view{display:none}
+  .view.on{display:block}
+  /* stat cards */
+  .stats{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:24px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+  .stat .n{font-size:26px;font-weight:800}
+  .stat .l{font-size:12px;color:var(--muted);margin-top:4px}
+  .stat.total .n{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px;vertical-align:1px}
+  .toolbar{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+  .search{flex:1;min-width:200px;position:relative}
+  .search input{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 14px 11px 38px;color:var(--text);font-size:14px}
+  .search input:focus{outline:none;border-color:var(--cyan)}
+  .search svg{position:absolute;left:12px;top:11px;opacity:.5}
+  select.filter{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 12px;color:var(--text);font-size:13px}
+  .board{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;align-items:start}
+  .col{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px;min-height:120px}
+  .col h3{margin:4px 6px 10px;font-size:13px;display:flex;align-items:center;justify-content:space-between}
+  .col h3 .cnt{background:var(--panel2);color:var(--muted);border-radius:20px;padding:1px 9px;font-size:11px;font-weight:700}
+  .card{background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:11px;margin-bottom:9px;cursor:pointer;transition:.12s}
+  .card:hover{border-color:var(--mag);transform:translateY(-1px)}
+  .card .nm{font-weight:700;font-size:14px;display:flex;justify-content:space-between;align-items:center;gap:6px}
+  .card .meta{font-size:12px;color:var(--muted);margin-top:5px;line-height:1.5;word-break:break-all}
+  .tag{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;background:#20203040;border:1px solid var(--line);color:var(--cyan);margin-top:7px}
+  .empty{color:var(--muted);font-size:12px;text-align:center;padding:20px 0}
+  /* modal */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+  .overlay.on{display:flex}
+  .modal{background:var(--panel);border:1px solid var(--line);border-radius:18px;width:100%;max-width:520px;max-height:90vh;overflow:auto;padding:22px}
+  .modal h2{margin:0 0 18px;font-size:18px}
+  .field{margin-bottom:13px}
+  .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;font-weight:600}
+  .field input,.field select,.field textarea{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--text);font-size:14px;font-family:inherit}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--cyan)}
+  .field textarea{resize:vertical;min-height:70px}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .modalft{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+  .modalft .spacer{flex:1}
+  .drow{display:flex;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+  .drow .k{width:90px;color:var(--muted);font-size:13px;flex-shrink:0}
+  .drow .v{flex:1;word-break:break-all}
+  .stagepick{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 4px}
+  .stagepick button{border:1px solid var(--line);background:var(--panel2);color:var(--muted);padding:6px 10px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600}
+  .stagepick button.active{color:#0a0a0f}
+  .note{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-size:13px;margin-bottom:7px}
+  .note .t{font-size:11px;color:var(--muted);margin-top:4px}
+  /* mail */
+  .mailbar{display:flex;gap:10px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
+  .mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+  .mcard{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px}
+  .mcard h4{margin:0 0 4px;font-size:15px;display:flex;justify-content:space-between;align-items:center}
+  .mcard .sub{font-size:11px;color:var(--muted);margin-bottom:14px;word-break:break-all}
+  .mnums{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center;margin-bottom:12px}
+  .mnums .b{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 4px}
+  .mnums .b .v{font-size:20px;font-weight:800}
+  .mnums .b .k{font-size:10px;color:var(--muted);margin-top:2px}
+  .bar{height:7px;border-radius:6px;background:var(--panel2);overflow:hidden;margin-bottom:5px}
+  .bar>i{display:block;height:100%;background:var(--grad)}
+  .rate{font-size:11px;color:var(--muted);display:flex;justify-content:space-between}
+  .banner{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--cyan);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6}
+  .err{border-left-color:var(--mag);color:#ffb4cf}
+  @media(max-width:900px){.stats{grid-template-columns:repeat(3,1fr)}.board{grid-template-columns:1fr}.col{min-height:0}}
+  .backupbar{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:10px;padding:10px 14px;font-size:12.5px;color:var(--muted);margin-bottom:14px;line-height:1.7}
+  .backupbar.ok{border-left-color:var(--ok)} .backupbar.danger{border-left-color:var(--mag);color:#ffb4cf}
+  .backupbar b{color:var(--text)} .backupbar .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .backupbar .btn{padding:6px 10px;font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap hd">
+    <div class="logo"><span class="mk">◤◢</span> VARIS <small>CRM</small></div>
+    <div class="nav">
+      <button data-view="crm" class="on">지원자 관리</button>
+      <button data-view="mail">메일 현황</button>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn ghost" id="exportBtn">CSV</button>
+    <button class="btn ghost" id="backupBtn" title="통합DB 21열 형식으로 다운로드">통합DB 백업</button>
+    <button class="btn ghost" id="restoreBtn" title="JSON/CSV 백업파일로 복원">복원</button>
+    <button class="btn ghost" id="sheetBtn" title="백업용 Google Sheets 열기">백업시트 ↗</button>
+    <button class="btn ghost" id="maskBtn" title="연락처·이메일 마스킹 토글">마스킹 ON</button>
+    <button class="btn ghost" id="seedBtn">샘플</button>
+    <button class="btn primary" id="addBtn">+ 지원자</button>
+    <input type="file" id="restoreFile" accept=".json,.csv" style="display:none">
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- ===== CRM VIEW ===== -->
+  <section class="view on" id="view-crm">
+    <div class="backupbar" id="backupBar"></div>
+    <div class="stats" id="stats"></div>
+    <div class="toolbar">
+      <div class="search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="search" placeholder="이름 · 연락처 · 이메일 검색">
+      </div>
+      <select class="filter" id="interestFilter"><option value="">전체 관심분야</option></select>
+    </div>
+    <div class="board" id="board"></div>
+  </section>
+
+  <!-- ===== MAIL VIEW ===== -->
+  <section class="view" id="view-mail">
+    <div class="banner" id="mailBanner">
+      <b>메일 발송현황</b> — mail.varis.kr의 그룹별 발송·오픈·클릭 결과를 API로 불러옵니다.
+      아래 <b>그룹 코드</b>에 mail.varis.kr 제어판에서 쓰는 그룹 토큰을 한 줄에 하나씩 넣으면 저장됩니다(이 브라우저에만 저장).
+    </div>
+    <div class="mailbar">
+      <button class="btn" id="mailCfg">그룹 코드 설정</button>
+      <button class="btn primary" id="mailRefresh">새로고침</button>
+      <span id="mailUpdated" style="font-size:12px;color:var(--muted)"></span>
+      <div class="spacer"></div>
+      <a class="btn ghost" href="https://mail.varis.kr/dashboard.html" target="_blank" rel="noopener">제어판 열기 ↗</a>
+    </div>
+    <div class="stats" id="mailTotals"></div>
+    <div class="mgrid" id="mailGrid"></div>
+  </section>
+</main>
+
+<!-- Add/Edit modal -->
+<div class="overlay" id="formOverlay">
+  <div class="modal">
+    <h2 id="formTitle">지원자 추가</h2>
+    <div class="field"><label>이름 *</label><input id="f_name" placeholder="홍길동"></div>
+    <div class="row2">
+      <div class="field"><label>연락처 *</label><input id="f_phone" placeholder="010-0000-0000"></div>
+      <div class="field"><label>이메일</label><input id="f_email" placeholder="name@example.com"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>관심 분야</label>
+        <select id="f_interest">
+          <option>미디어아트 / 공간 연출</option><option>3D · VFX (Blender · UE5)</option>
+          <option>모션그래픽 (After Effects)</option><option>생성형 AI 콘텐츠</option><option>아직 정하지 못함</option>
+        </select>
+      </div>
+      <div class="field"><label>유입 경로</label>
+        <select id="f_source">
+          <option>홈페이지 폼</option><option>인스타그램</option><option>유튜브</option>
+          <option>지인 추천</option><option>검색</option><option>메일 캠페인</option><option>기타</option>
+        </select>
+      </div>
+    </div>
+    <div class="field"><label>지원 동기 · 문의</label><textarea id="f_motive" placeholder="상담 시 참고할 내용"></textarea></div>
+    <div class="modalft">
+      <button class="btn ghost" id="formCancel">취소</button>
+      <div class="spacer"></div>
+      <button class="btn primary" id="formSave">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- Detail modal -->
+<div class="overlay" id="detailOverlay"><div class="modal" id="detailModal"></div></div>
+
+<!-- Mail config modal -->
+<div class="overlay" id="cfgOverlay">
+  <div class="modal">
+    <h2>그룹 코드 설정</h2>
+    <div class="field"><label>그룹 코드 (한 줄에 하나)</label><textarea id="cfgTokens" style="min-height:200px;font-size:15px;line-height:1.7" placeholder="g1-xxxx&#10;g2-yyyy&#10;&#10;한 줄에 하나씩"></textarea></div>
+    <div class="banner" style="border-left-color:var(--warn)">이 값은 서버로 전송되지 않고 <b>이 브라우저(localStorage)</b>에만 저장됩니다. mail.varis.kr 제어판의 그룹과 동일한 코드를 넣어세요.</div>
+    <div class="modalft"><button class="btn ghost" id="cfgCancel">취소</button><div class="spacer"></div><button class="btn primary" id="cfgSave">저장</button></div>
+  </div>
+</div>
+
+<script>
+/* ============ CRM (applicants) ============ */
+const STAGES=[
+  {id:"new",label:"신규 접수",color:"#22d3ee"},
+  {id:"consult",label:"상담 예정",color:"#fbbf24"},
+  {id:"interview",label:"면접",color:"#ff2d78"},
+  {id:"enrolled",label:"등록 완료",color:"#34d399"},
+  {id:"hold",label:"보류/미등록",color:"#a78bfa"},
+];
+const KEY="varis_crm_v1";
+const BACKUP_SHEET_URL="https://docs.google.com/spreadsheets/d/15Wr_Vu38Ccqj1g_qxX3dhArvVBkc2iuY5G-Km-M-Q3o/edit?usp=sharing";
+const META_KEY="varis_crm_backup_meta";
+const MASK_KEY="varis_crm_mask";
+const INIT_KEY="varis_crm_initialized";
+let maskOn=(function(){try{return localStorage.getItem(MASK_KEY)!=="off"}catch(e){return true}})();
+const UNIFIED_HEAD=["연락처ID","분류","프로젝트/소속","기수","이름","연락처","이메일","직책/역할","관리상태","응답/참석 상태","유입경로","과정","운영 메모","원본 시트","연락처 유형","공개출처 URL","수신동의상태","동의일시","수신거부","최종검증일","발송상태"];
+let data=load(); let editingId=null;
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||[]}catch(e){return[]}}
+function save(){localStorage.setItem(KEY,JSON.stringify(data))}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function esc(s){return(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function fmtDate(ts){const d=new Date(ts);return d.getFullYear()+"."+String(d.getMonth()+1).padStart(2,"0")+"."+String(d.getDate()).padStart(2,"0")}
+function fmtTime(ts){const d=new Date(ts);return fmtDate(ts)+" "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")}
+
+function render(){renderStats();renderFilter();renderBoard();renderBackupBar();try{document.getElementById("maskBtn").textContent=maskOn?"마스킹 ON":"마스킹 OFF"}catch(e){}}
+function renderStats(){
+  const el=document.getElementById("stats");
+  const by=s=>data.filter(d=>d.stage===s).length;
+  let h=`<div class="stat total"><div class="n">${data.length}</div><div class="l">전체 지원자</div></div>`;
+  STAGES.forEach(s=>{h+=`<div class="stat"><div class="n">${by(s.id)}</div><div class="l"><span class="dot" style="background:${s.color}"></span>${s.label}</div></div>`});
+  el.innerHTML=h;
+}
+function renderFilter(){
+  const sel=document.getElementById("interestFilter");const cur=sel.value;
+  const set=[...new Set(data.map(d=>d.interest).filter(Boolean))];
+  sel.innerHTML=`<option value="">전체 관심분야</option>`+set.map(i=>`<option ${i===cur?"selected":""}>${esc(i)}</option>`).join("");
+}
+function filtered(){
+  const q=document.getElementById("search").value.trim().toLowerCase();
+  const fi=document.getElementById("interestFilter").value;
+  return data.filter(d=>{if(fi&&d.interest!==fi)return false;if(!q)return true;return[d.name,d.phone,d.email].some(v=>(v||"").toLowerCase().includes(q))});
+}
+function renderBoard(){
+  const board=document.getElementById("board");const list=filtered();
+  board.innerHTML=STAGES.map(s=>{
+    const items=list.filter(d=>d.stage===s.id).sort((a,b)=>b.createdAt-a.createdAt);
+    const cards=items.map(d=>`<div class="card" data-id="${d.id}"><div class="nm"><span>${esc(d.name)}</span><span class="dot" style="background:${s.color}"></span></div><div class="meta">${esc(maskPhone(d.phone||""))}${d.email?"<br>"+esc(maskEmail(d.email)):""}</div>${d.interest?`<span class="tag">${esc(d.interest)}</span>`:""}</div>`).join("")||`<div class="empty">비어 있음</div>`;
+    return `<div class="col"><h3><span><span class="dot" style="background:${s.color}"></span>${s.label}</span><span class="cnt">${items.length}</span></h3>${cards}</div>`;
+  }).join("");
+  board.querySelectorAll(".card").forEach(c=>c.onclick=()=>openDetail(c.dataset.id));
+}
+function openForm(id){
+  editingId=id||null;const rec=id?data.find(d=>d.id===id):null;
+  document.getElementById("formTitle").textContent=id?"지원자 수정":"지원자 추가";
+  f_name.value=rec?rec.name:"";f_phone.value=rec?rec.phone:"";f_email.value=rec?rec.email:"";
+  f_interest.value=rec?rec.interest:f_interest.options[0].value;f_source.value=rec?rec.source:f_source.options[0].value;f_motive.value=rec?rec.motive:"";
+  formOverlay.classList.add("on");
+}
+function saveForm(){
+  const name=f_name.value.trim();if(!name){f_name.focus();f_name.style.borderColor="var(--mag)";return}
+  const p={name,phone:f_phone.value.trim(),email:f_email.value.trim(),interest:f_interest.value,source:f_source.value,motive:f_motive.value.trim()};
+  if(editingId){Object.assign(data.find(d=>d.id===editingId),p)}else{data.push({id:uid(),stage:"new",createdAt:Date.now(),notes:[],...p})}
+  save();render();formOverlay.classList.remove("on");
+}
+function openDetail(id){
+  const d=data.find(x=>x.id===id);if(!d)return;
+  const sb=STAGES.map(s=>`<button data-s="${s.id}" class="${d.stage===s.id?"active":""}" style="${d.stage===s.id?`background:${s.color};border-color:${s.color}`:""}">${s.label}</button>`).join("");
+  const notes=(d.notes||[]).slice().reverse().map(n=>`<div class="note">${esc(n.text)}<div class="t">${fmtDate(n.ts)}</div></div>`).join("")||`<div class="empty">메모 없음</div>`;
+  document.getElementById("detailModal").innerHTML=`
+    <h2>${esc(d.name)}</h2><div class="stagepick">${sb}</div>
+    <div class="drow"><div class="k">연락처</div><div class="v">${esc(maskOn?maskPhone(d.phone):(d.phone||"-"))} ${maskOn?"(마스킹됨)":""}</div></div>
+    <div class="drow"><div class="k">이메일</div><div class="v">${esc(maskOn?maskEmail(d.email):(d.email||"-"))} ${maskOn?"(마스킹됨)":""}</div></div>
+    <div class="drow"><div class="k">관심분야</div><div class="v">${esc(d.interest)||"-"}</div></div>
+    <div class="drow"><div class="k">유입경로</div><div class="v">${esc(d.source)||"-"}</div></div>
+    <div class="drow"><div class="k">지원동기</div><div class="v">${esc(d.motive)||"-"}</div></div>
+    <div class="drow"><div class="k">접수일</div><div class="v">${fmtDate(d.createdAt)}</div></div>
+    <div style="margin:16px 0 8px;font-size:13px;color:var(--muted);font-weight:600">상담 메모</div>
+    <div class="field" style="display:flex;gap:8px"><input id="noteInput" placeholder="메모 추가 후 Enter"><button class="btn" id="noteAdd">추가</button></div>
+    <div id="noteList">${notes}</div>
+    <div class="modalft"><button class="btn ghost" id="delBtn" style="border-color:#7f1d1d;color:#f87171">삭제</button><div class="spacer"></div><button class="btn ghost" id="editBtn">수정</button><button class="btn primary" id="closeDetail">닫기</button></div>`;
+  detailOverlay.classList.add("on");
+  document.querySelectorAll(".stagepick button").forEach(b=>b.onclick=()=>{d.stage=b.dataset.s;save();render();openDetail(id)});
+  document.getElementById("closeDetail").onclick=()=>detailOverlay.classList.remove("on");
+  document.getElementById("editBtn").onclick=()=>{detailOverlay.classList.remove("on");openForm(id)};
+  document.getElementById("delBtn").onclick=()=>{if(confirm(d.name+" 지원자를 삭제할까요?")){data=data.filter(x=>x.id!==id);save();render();detailOverlay.classList.remove("on")}};
+  const ni=document.getElementById("noteInput");
+  const add=()=>{const t=ni.value.trim();if(!t)return;d.notes=d.notes||[];d.notes.push({text:t,ts:Date.now()});save();openDetail(id)};
+  document.getElementById("noteAdd").onclick=add;ni.onkeydown=e=>{if(e.key==="Enter")add()};
+}
+
+function maskPhone(p){if(!maskOn)return p||"";p=p||"";const d=p.replace(/[^0-9]/g,"");if(d.length<7)return p;return d.slice(0,3)+"-****-"+d.slice(-4)}
+function maskEmail(e){if(!maskOn)return e||"";e=e||"";const at=e.indexOf("@");if(at<=0)return e;const id=e.slice(0,at),dom=e.slice(at);if(id.length<=2)return id[0]+"*"+dom;return id.slice(0,2)+"***"+dom}
+function getMeta(){try{return JSON.parse(localStorage.getItem(META_KEY))||{}}catch(e){return{}}}
+function setMeta(m){localStorage.setItem(META_KEY,JSON.stringify(m))}
+function markBackup(kind){const m=getMeta();m.lastBackup=Date.now();m.lastKind=kind||m.lastKind||"";m.lastCount=data.length;setMeta(m);renderBackupBar()}
+function renderBackupBar(){
+  const el=document.getElementById("backupBar");if(!el)return;
+  const m=getMeta();const n=data.length;
+  const hasInit=(()=>{try{return !!localStorage.getItem(INIT_KEY)}catch(e){return true}})();
+  let lastTxt="없음",ageTxt="",cls="";
+  if(m.lastBackup){const d=new Date(m.lastBackup);lastTxt=d.getFullYear()+"."+String(d.getMonth()+1).padStart(2,"0")+"."+String(d.getDate()).padStart(2,"0")+" "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");const days=(Date.now()-m.lastBackup)/86400000;ageTxt=" ("+days.toFixed(1)+"일 전 · "+(m.lastKind||"백업")+" · "+(m.lastCount??"?")+"건)";if(days>7){cls="danger"}else if(days>3){cls=""}else{cls="ok"}}
+  else{cls="danger"}
+  const warn=(cls==="danger")?" ⚠️ 백업이 오래됐거나 없습니다. [통합DB 백업] 후 시트 CRM_백업 탭에 붙여넣고 [백업완료 기록]을 눌러주세요.":"";
+  el.className="backupbar "+cls;
+  el.innerHTML="<b>이 브라우저 전용 저장</b> · 서버 DB 없음 · 다른 PC·브라우저와 공유 안 됨<br>전체 <b>"+n+"</b>건 · 마지막 백업: <b>"+lastTxt+"</b>"+ageTxt+warn+
+   "<div class='row'><button class='btn' id='bbBackup'>통합DB 백업 CSV</button><button class='btn' id='bbJson'>전체 JSON 백업</button><button class='btn' id='bbDone'>백업완료 기록</button><button class='btn' id='bbCopyHead'>시트 헤더 복사</button><a class='btn ghost' style='text-decoration:none' href='"+BACKUP_SHEET_URL+"' target='_blank' rel='noopener'>백업시트 열기 ↗</a></div>"+
+   "<div style='margin-top:6px'>복원: 상단 [복원] → JSON 권장 (메모·단계·메일토큰 포함). CSV는 연락처·이메일 기준 중복 병합됩니다. 시트 정본 → CRM은 작업용 사본으로 쓰세요.</div>";
+  const q=id=>document.getElementById(id);
+  if(q("bbBackup"))q("bbBackup").onclick=exportUnified;
+  if(q("bbJson"))q("bbJson").onclick=exportJson;
+  if(q("bbDone"))q("bbDone").onclick=()=>{markBackup("시트 붙여넣기");alert("백업 시각을 기록했습니다. 시트에 실제 붙여넣었는지 다시 확인해주세요.")};
+  if(q("bbCopyHead"))q("bbCopyHead").onclick=async()=>{try{await navigator.clipboard.writeText(UNIFIED_HEAD.join("\t"));alert("통합DB 헤더 21열을 복사했습니다. 시트 새 탭 A1에 붙여넣으세요.")}catch(e){prompt("아래 헤더를 복사하세요",UNIFIED_HEAD.join(","))}};
+}
+function stageLabel(id){return (STAGES.find(s=>s.id===id)||{}).label||id}
+function exportUnified(){
+  if(!data.length){alert("내보낼 데이터가 없습니다.");return}
+  if(!confirm("개인정보(이름·연락처·이메일) "+data.length+"건이 CSV에 포함됩니다. 계속할까요?"))return;
+  const rows=data.map(d=>{
+    const notes=(d.notes||[]).map(x=>x.text).join(" / ");
+    const memo=[d.motive||"",notes?("[메모] "+notes):"",d.id?("crmID:"+d.id):""].filter(Boolean).join(" | ");
+    return ["CRM-"+d.id,"지원자","VARIS","",d.name,d.phone,d.email,"",stageLabel(d.stage),"",d.source,d.interest,memo,"crm.varis.kr","개인","","미확인","","","", ""];
+  });
+  const csv=[UNIFIED_HEAD,...rows].map(r=>r.map(c=>'"'+(c||"").toString().replace(/"/g,'""')+'"').join(",")).join("\r\n");
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"}));
+  a.download="varis_crm_unified_"+fmtDate(Date.now()).replace(/\./g,"")+"_"+data.length+"건.csv";a.click();
+}
+function exportJson(){
+  const payload={app:"varis-crm",version:2,exportedAt:new Date().toISOString(),count:data.length,data,tokens:getTokens(),meta:getMeta()};
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}));
+  a.download="varis_crm_backup_"+fmtDate(Date.now()).replace(/\./g,"")+"_"+data.length+"건.json";a.click();
+  markBackup("JSON 다운로드");
+}
+function mergeRecords(incoming){
+  let added=0,updated=0;
+  const key=d=>((d.phone||"").replace(/[^0-9]/g,"")+"|"+(d.email||"").toLowerCase().trim());
+  const idx=new Map(data.map((d,i)=>[key(d),i]));
+  incoming.forEach(r=>{
+    if(!r.name&&!r.phone&&!r.email)return;
+    const k=key(r);const at=idx.get(k);
+    if(at==null||k==="|"){data.push({id:r.id||uid(),stage:r.stage||"new",createdAt:r.createdAt||Date.now(),notes:r.notes||[],name:r.name||"",phone:r.phone||"",email:r.email||"",interest:r.interest||"",source:r.source||"",motive:r.motive||""});added++}
+    else{const cur=data[at];["name","phone","email","interest","source","motive","stage"].forEach(f=>{if(r[f]&&!cur[f])cur[f]=r[f]});if(r.notes&&r.notes.length){cur.notes=cur.notes||[];r.notes.forEach(n=>{if(n&&n.text&&!cur.notes.some(x=>x.text===n.text))cur.notes.push(n)})}updated++}
+  });
+  return {added,updated};
+}
+function parseCsvLine(line){
+  const out=[];let cur="",q=false;
+  for(let i=0;i<line.length;i++){const c=line[i];if(q){if(c==='"'){if(line[i+1]==='"'){cur+='"';i++}else{q=false}}else{cur+=c}}else{if(c==='"')q=true;else if(c===","){out.push(cur);cur=""}else{cur+=c}}}
+  out.push(cur);return out;
+}
+function handleRestoreFile(file){
+  const rd=new FileReader();
+  rd.onload=()=>{
+    try{
+      const txt=rd.result;
+      if(file.name.toLowerCase().endsWith(".json")){
+        const j=JSON.parse(txt);const arr=j.data||j;
+        if(!Array.isArray(arr))throw new Error("JSON 형식 오류");
+        const r=mergeRecords(arr);
+        if(j.tokens&&Array.isArray(j.tokens))setTokens(j.tokens);
+        save();render();markBackup("복원(JSON)");
+        alert("복원 완료: 추가 "+r.added+"건 · 병합 "+r.updated+"건 · 현재 총 "+data.length+"건");
+      }else{
+        const lines=txt.replace(/^\uFEFF/,"").split(/\r?\n/).filter(l=>l.trim());
+        if(!lines.length)throw new Error("빈 CSV");
+        const head=parseCsvLine(lines[0]);
+        const isUnified=head.includes("연락처ID")&&head.includes("운영 메모");
+        let arr=[];
+        if(isUnified){
+          const H=head;const gi=n=>H.indexOf(n);
+          arr=lines.slice(1).map(ln=>{const c=parseCsvLine(ln);const g=i=>c[i]||"";return {name:g(gi("이름")),phone:g(gi("연락처")),email:g(gi("이메일")),interest:g(gi("과정")),source:g(gi("유입경로")),motive:g(gi("운영 메모")),stage:(function(){const s=g(gi("관리상태"));const f=STAGES.find(x=>x.label===s);return f?f.id:"new"})(),createdAt:Date.now(),notes:[]}});
+        }else{
+          const H=head;const gi=n=>H.indexOf(n);
+          arr=lines.slice(1).map(ln=>{const c=parseCsvLine(ln);const g=i=>c[i]||"";return {name:g(gi("이름")),phone:g(gi("연락처")),email:g(gi("이메일")),interest:g(gi("관심분야")),source:g(gi("유입경로")),motive:g(gi("지원동기")),stage:(function(){const s=g(gi("단계"));const f=STAGES.find(x=>x.label===s);return f?f.id:"new"})(),createdAt:Date.now(),notes:[]}});
+        }
+        const r=mergeRecords(arr);save();render();markBackup("복원(CSV)");
+        alert("복원 완료: 추가 "+r.added+"건 · 병합 "+r.updated+"건 · 현재 총 "+data.length+"건");
+      }
+    }catch(e){alert("복원 실패: "+e.message)}
+  };
+  rd.readAsText(file,"utf-8");
+}
+
+function exportCsv(){
+  if(!data.length){alert("내보낼 데이터가 없습니다.");return}
+  if(!confirm("개인정보(이름·연락처·이메일) "+data.length+"건이 CSV에 포함됩니다. 계속할까요?"))return
+  const head=["이름","연락처","이메일","관심분야","유입경로","단계","지원동기","접수일"];
+  const lab=id=>(STAGES.find(s=>s.id===id)||{}).label||id;
+  const rows=data.map(d=>[d.name,d.phone,d.email,d.interest,d.source,lab(d.stage),(d.motive||"").replace(/\n/g," "),fmtDate(d.createdAt)]);
+  const csv=[head,...rows].map(r=>r.map(c=>`"${(c||"").toString().replace(/"/g,'""')}"`).join(",")).join("\r\n");
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["﻿"+csv],{type:"text/csv;charset=utf-8"}));
+  a.download="varis_crm_"+fmtDate(Date.now()).replace(/\./g,"")+".csv";a.click();
+}
+function seed(){
+  if(data.length&&!confirm("샘플 데이터를 추가할까요? (기존 데이터는 유지됩니다)"))return;
+  const S=[
+    ["김서연","010-2841-7720","seoyeon.k@gmail.com","생성형 AI 콘텐츠","인스타그램","consult","AI 아트 포트폴리오를 만들고 싶어요."],
+    ["박준호","010-9932-1188","jhpark@naver.com","3D · VFX (Blender · UE5)","유튜브","interview","UE5 실시간 렌더링 경험 있음."],
+    ["이하늘","010-4471-2093","haneul.lee@daum.net","모션그래픽 (After Effects)","검색","new",""],
+    ["최민지","010-7788-3321","minji.choi@gmail.com","미디어아트 / 공간 연출","지인 추천","enrolled","전시 프로젝트 참여 희망."],
+    ["정우진","010-3020-5567","woojin@kakao.com","아직 정하지 못함","메일 캠페인","new","비전공자, 기초부터."],
+    ["한예린","010-6614-8899","yerin.h@gmail.com","생성형 AI 콘텐츠","인스타그램","hold","다음 기수 검토."],
+  ];
+  S.forEach((r,i)=>data.push({id:uid(),name:r[0],phone:r[1],email:r[2],interest:r[3],source:r[4],stage:r[5],motive:r[6],createdAt:Date.now()-i*86400000,notes:[]}));
+  save();render();
+}
+
+/* ============ MAIL stats ============ */
+const MAIL_API="/api/stats?c=";
+const TOKENS_KEY="varis_crm_mail_tokens";
+function getTokens(){try{return JSON.parse(localStorage.getItem(TOKENS_KEY))||[]}catch(e){return[]}}
+function setTokens(a){localStorage.setItem(TOKENS_KEY,JSON.stringify(a))}
+function pct(a,b){return b>0?Math.round(a/b*100):0}
+
+async function fetchMail(){
+  const grid=document.getElementById("mailGrid");
+  const totalsEl=document.getElementById("mailTotals");
+  const tokens=getTokens();
+  if(!tokens.length){grid.innerHTML=`<div class="empty">그룹 코드가 없습니다. 상단 "그룹 코드 설정"에서 mail.varis.kr 그룹 토큰을 넣어주세요.</div>`;totalsEl.innerHTML="";return}
+  grid.innerHTML=`<div class="empty">불러오는 중…</div>`;
+  const results=[];
+  for(const tk of tokens){
+    try{
+      const r=await fetch(MAIL_API+encodeURIComponent(tk),{cache:"no-store"});
+      if(!r.ok){results.push({token:tk,error:"HTTP "+r.status});continue}
+      const j=await r.json();
+      results.push({token:tk,campaign:j.campaign,total:+j.total||0,sent:+j.sentCount||0,opened:+j.opened||0,clicked:+j.clicked||0});
+    }catch(e){results.push({token:tk,error:"연결 실패"})}
+  }
+  renderMail(results);
+  document.getElementById("mailUpdated").textContent="업데이트 "+fmtTime(Date.now());
+}
+function renderMail(results){
+  const grid=document.getElementById("mailGrid");
+  const totalsEl=document.getElementById("mailTotals");
+  const ok=results.filter(r=>!r.error);
+  const T=ok.reduce((a,r)=>({total:a.total+r.total,sent:a.sent+r.sent,opened:a.opened+r.opened,clicked:a.clicked+r.clicked}),{total:0,sent:0,opened:0,clicked:0});
+  totalsEl.innerHTML=`
+    <div class="stat total"><div class="n">${T.total}</div><div class="l">전체 대상</div></div>
+    <div class="stat"><div class="n">${T.sent}</div><div class="l"><span class="dot" style="background:#22d3ee"></span>발송</div></div>
+    <div class="stat"><div class="n">${T.opened}</div><div class="l"><span class="dot" style="background:#fbbf24"></span>오픈 ${pct(T.opened,T.sent)}%</div></div>
+    <div class="stat"><div class="n">${T.clicked}</div><div class="l"><span class="dot" style="background:#34d399"></span>클릭 ${pct(T.clicked,T.sent)}%</div></div>
+    <div class="stat"><div class="n">${ok.length}</div><div class="l">그룹 수</div></div>
+    <div class="stat"><div class="n">${pct(T.sent,T.total)}%</div><div class="l">발송 진행률</div></div>`;
+  grid.innerHTML=results.map(r=>{
+    if(r.error)return `<div class="mcard"><h4>${esc(r.token)}</h4><div class="banner err" style="margin:8px 0 0">불러오기 실패: ${esc(r.error)}</div></div>`;
+    return `<div class="mcard">
+      <h4><span>${esc(r.campaign||r.token)}</span></h4>
+      <div class="sub">코드 ${esc(r.token)}</div>
+      <div class="mnums">
+        <div class="b"><div class="v">${r.sent}</div><div class="k">발송</div></div>
+        <div class="b"><div class="v">${r.opened}</div><div class="k">오픈</div></div>
+        <div class="b"><div class="v">${r.clicked}</div><div class="k">클릭</div></div>
+        <div class="b"><div class="v">${r.total}</div><div class="k">전체</div></div>
+      </div>
+      <div class="bar"><i style="width:${pct(r.sent,r.total)}%"></i></div>
+      <div class="rate"><span>발송 ${r.sent}/${r.total} · 대기 ${Math.max(0,r.total-r.sent)}</span><span>오픈 ${pct(r.opened,r.sent)}% · 클릭 ${pct(r.clicked,r.sent)}%</span></div>
+    </div>`;
+  }).join("");
+}
+
+/* ============ nav + events ============ */
+function switchView(v){
+  document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("on",b.dataset.view===v));
+  document.getElementById("view-crm").classList.toggle("on",v==="crm");
+  document.getElementById("view-mail").classList.toggle("on",v==="mail");
+  document.getElementById("addBtn").style.display=v==="crm"?"":"none";
+  try{document.getElementById("backupBtn").style.display=v==="crm"?"":"none";document.getElementById("restoreBtn").style.display=v==="crm"?"":"none";document.getElementById("sheetBtn").style.display=v==="crm"?"":"none";document.getElementById("maskBtn").style.display=v==="crm"?"":"none"}catch(e){}
+  document.getElementById("exportBtn").style.display=v==="crm"?"":"none";
+  document.getElementById("seedBtn").style.display=v==="crm"?"":"none";
+  if(v==="mail")fetchMail();
+}
+document.querySelectorAll(".nav button").forEach(b=>b.onclick=()=>switchView(b.dataset.view));
+document.getElementById("addBtn").onclick=()=>openForm();
+document.getElementById("formSave").onclick=saveForm;
+document.getElementById("formCancel").onclick=()=>formOverlay.classList.remove("on");
+document.getElementById("exportBtn").onclick=exportCsv;
+document.getElementById("backupBtn").onclick=exportUnified;
+document.getElementById("restoreBtn").onclick=()=>document.getElementById("restoreFile").click();
+document.getElementById("restoreFile").onchange=e=>{if(e.target.files[0])handleRestoreFile(e.target.files[0]);e.target.value=""};
+document.getElementById("sheetBtn").onclick=()=>window.open(BACKUP_SHEET_URL,"_blank","noopener");
+document.getElementById("maskBtn").onclick=()=>{maskOn=!maskOn;try{localStorage.setItem(MASK_KEY,maskOn?"on":"off")}catch(e){} render()};
+document.getElementById("seedBtn").onclick=seed;
+document.getElementById("search").oninput=renderBoard;
+document.getElementById("interestFilter").onchange=renderBoard;
+document.getElementById("mailRefresh").onclick=fetchMail;
+document.getElementById("mailCfg").onclick=()=>{document.getElementById("cfgTokens").value=getTokens().join("\n");cfgOverlay.classList.add("on")};
+document.getElementById("cfgCancel").onclick=()=>cfgOverlay.classList.remove("on");
+document.getElementById("cfgSave").onclick=()=>{const arr=document.getElementById("cfgTokens").value.split("\n").map(s=>s.trim()).filter(Boolean);setTokens(arr);cfgOverlay.classList.remove("on");fetchMail()};
+[formOverlay,detailOverlay,cfgOverlay].forEach(o=>o.onclick=e=>{if(e.target===o)o.classList.remove("on")});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){formOverlay.classList.remove("on");detailOverlay.classList.remove("on");cfgOverlay.classList.remove("on")}});
+
+try{if(!localStorage.getItem(INIT_KEY)){if(!data.length)seed();localStorage.setItem(INIT_KEY,"1")}else{if(!data.length)renderBackupBar()}}catch(e){if(!data.length)seed()}
+render();
+</script>
+</body>
+</html>
