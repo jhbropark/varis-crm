@@ -1,0 +1,17 @@
+{
+  "name": "varis-crm",
+  "private": true,
+  "version": "2.1.0",
+  "scripts": {
+    "test": "node --test core.test.cjs",
+    "build": "node --test core.test.cjs && node scripts/build.cjs",
+    "dev": "node scripts/serve.cjs",
+    "test:browser": "playwright test browser.test.cjs --workers=1"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1"
+  }
+}
