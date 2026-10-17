@@ -1,6 +1,8 @@
 'use strict';
 const C=CrmCore,$=id=>document.getElementById(id),KEY='varis_crm_v1',META_KEY='varis_crm_backup_meta';
 const SHEET='https://docs.google.com/spreadsheets/d/15Wr_Vu38Ccqj1g_qxX3dhArvVBkc2iuY5G-Km-M-Q3o/edit';
+const SENDER_DASHBOARD='https://sender.varis.kr/';
+const SENDER_DATA='/api/sender-status';
 const colors=['#22d3ee','#fbbf24','#ff2d78','#34d399','#a78bfa'];
 const limits=Object.fromEntries(C.STAGES.map(s=>[s,50]));
 let storage;try{storage=window.localStorage;}catch(e){storage={getItem(){throw Error('브라우저 저장소 접근 불가');}};}
@@ -38,6 +40,19 @@ function renderBackup(){
  $('jsonBackup').onclick=()=>exportData('json');
  $('sheetAck').onclick=()=>{if(!confirm('Google Sheets에 실제 보관했는지 직접 확인하셨나요? 이 기록은 서버 백업을 검증하지 않습니다.'))return;const m=readMeta();m.sheetAcknowledgedAt=Date.now();metaWrite(m);renderBackup();};
  $('syncTabs').onclick=()=>{state=store.read();data=state.data;tabChanged=false;document.querySelectorAll('.overlay.on').forEach(x=>hideModal(x.id));render();notice('현재 브라우저 저장소를 다시 읽었습니다. PC 간 동기화는 아닙니다.');};
+}
+
+function renderRecruitment(d){
+ const tr=d.tracking||{},campaigns=Array.isArray(d.campaigns)?d.campaigns:[],stamp=d.updated_at?new Date(d.updated_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'}):'확인 불가';
+ $('recruitStatus').className='banner';$('recruitStatus').textContent='마지막 집계: '+stamp+' · 60초마다 자동 갱신 · 읽기 전용';
+ $('recruitKpis').innerHTML=[['SMTP 접수 성공',Number(d.smtp_success)||0],['고유 수신 주소',Number(d.unique_recipients)||0],['실패 이력',Number(d.failed_attempts)||0],['억제 주소',Number(d.suppressed_count)||0],['오픈 / 클릭',(Number(tr.opened)||0)+' / '+(Number(tr.clicked)||0)]].map(x=>'<div class="stat"><div class="n">'+esc(x[1])+'</div><div class="l">'+esc(x[0])+'</div></div>').join('');
+ const max=Math.max(1,...campaigns.map(x=>Number(x.success)||0));
+ $('recruitCampaigns').innerHTML=campaigns.map(x=>{const success=Number(x.success)||0,failed=Number(x.failed)||0;return '<article class="mcard"><h4>'+esc(x.name||'이름 없는 캠페인')+'</h4><div class="source">sender.py 집계</div><div class="bar"><i style="width:'+Math.round(success/max*100)+'%"></i></div><div class="nums"><span><b>'+success+'</b> 성공</span><span><b>'+failed+'</b> 실패</span></div></article>';}).join('')||'<div class="banner">캠페인 집계가 없습니다.</div>';
+}
+async function loadRecruitment(){
+ const status=$('recruitStatus');if(!status)return;status.className='banner';status.textContent='모집 상태를 불러오는 중...';
+ try{const res=await fetch(SENDER_DATA+'?t='+Date.now(),{cache:'no-store'});if(!res.ok)throw Error('HTTP '+res.status);renderRecruitment(await res.json());}
+ catch(e){$('recruitKpis').innerHTML='';$('recruitCampaigns').innerHTML='';status.className='banner err';status.textContent='실시간 모집 상태를 불러오지 못했습니다. sender 대시보드에서 확인하세요.';}
 }
 function openForm(id){
  document.querySelectorAll('.modalMessage').forEach(e=>e.remove());
@@ -80,13 +95,15 @@ async function restoreFile(file){
 }
 function applyImport(){if(!pendingImport)return;if(C.fingerprint(data)!==pendingImport.before){notice('미리보기 후 데이터가 바뀌었습니다. 파일을 다시 선택해 주세요.',true);hideModal('restoreOverlay');return;}if(saveCandidate(pendingImport.plan.next)){notice('가져오기를 적용했습니다. 충돌 값은 보존했습니다.');pendingImport=null;hideModal('restoreOverlay');}}
 function seed(){if(!confirm('명확히 표시된 데모 1건을 추가할까요? 실제 연락처가 아닌 example.invalid 주소만 사용합니다.'))return;saveCandidate([...data,{id:C.uid(),name:'데모 지원자',phone:'',email:'demo@example.invalid',interest:'생성형 AI 콘텐츠',source:'데모',motive:'연습용 데이터입니다. 실제 리드가 아닙니다.',stage:'new',createdAt:Date.now(),notes:[],demo:true}]);}
-function switchView(v){document.querySelectorAll('.nav button').forEach(b=>{b.classList.toggle('on',b.dataset.view===v);b.setAttribute('aria-pressed',String(b.dataset.view===v));});$('view-crm').classList.toggle('on',v==='crm');$('view-mail').classList.toggle('on',v==='mail');document.querySelectorAll('header .btn').forEach(b=>b.hidden=v!=='crm');}
+function switchView(v){document.querySelectorAll('.nav button').forEach(b=>{b.classList.toggle('on',b.dataset.view===v);b.setAttribute('aria-pressed',String(b.dataset.view===v));});$('view-crm').classList.toggle('on',v==='crm');$('view-mail').classList.toggle('on',v==='mail');$('view-recruitment').classList.toggle('on',v==='recruitment');document.querySelectorAll('header .btn').forEach(b=>b.hidden=v!=='crm');if(v==='recruitment')loadRecruitment();}
 $('exportBtn').onclick=()=>exportData('basic');$('backupBtn').onclick=()=>exportData('unified');$('sheetBtn').onclick=()=>window.open(SHEET,'_blank','noopener,noreferrer');
 $('restoreBtn').onclick=()=>$('restoreFile').click();$('restoreFile').onchange=e=>{if(e.target.files[0])restoreFile(e.target.files[0]);e.target.value='';};
 $('maskBtn').onclick=()=>{if(maskOn&&!confirm('연락처와 이메일을 화면에 표시할까요? 화면 공유 여부를 확인해 주세요.'))return;maskOn=!maskOn;render();};
 $('addBtn').onclick=()=>openForm();$('seedBtn').onclick=seed;$('formSave').onclick=saveForm;$('formCancel').onclick=()=>hideModal('formOverlay');$('applyImport').onclick=applyImport;$('cancelImport').onclick=()=>{pendingImport=null;hideModal('restoreOverlay');};
 let timer;$('search').oninput=()=>{clearTimeout(timer);timer=setTimeout(()=>{C.STAGES.forEach(s=>limits[s]=50);renderBoard();},120);};$('interestFilter').onchange=()=>{C.STAGES.forEach(s=>limits[s]=50);renderBoard();};
 for(const b of document.querySelectorAll('.nav button'))b.onclick=()=>switchView(b.dataset.view);
+$('recruitRefresh').onclick=loadRecruitment;
+window.setInterval(()=>{if(document.querySelector('#view-recruitment.on'))loadRecruitment();},60000);
 for(const overlay of document.querySelectorAll('.overlay'))overlay.onclick=e=>{if(e.target===overlay)hideModal(overlay.id);};
 document.addEventListener('keydown',e=>{const modal=document.querySelector('.overlay.on');if(!modal)return;if(e.key==='Escape'){hideModal(modal.id);return;}if(e.key==='Tab'){const f=[...modal.querySelectorAll('button,input,select,textarea,a[href]')].filter(x=>!x.disabled);if(!f.length)return;const first=f[0],last=f[f.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});
 window.addEventListener('storage',e=>{if(e.key===KEY||e.key===null){tabChanged=true;for(const id of ['addBtn','restoreBtn','seedBtn'])$(id).disabled=true;notice('다른 탭에서 저장소가 변경됐습니다. 입력 내용을 복사한 뒤 [다른 탭 변경 불러오기]로 새로 읽어주세요. 자동 덮어쓰기는 차단됩니다.',true);}});
