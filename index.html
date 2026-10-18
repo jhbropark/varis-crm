@@ -23,6 +23,7 @@
       <button data-view="crm" class="on">지원자 관리</button>
       <button data-view="mail">메일 현황</button>
       <button data-view="recruitment">모집 자동화</button>
+      <button data-view="electronic">전자기능</button>
     </div>
     <div class="spacer"></div>
     <button class="btn ghost" id="exportBtn">CSV</button>
@@ -38,7 +39,7 @@
 
 <main class="wrap" id="workspace">
 <h1 class="pageTitle">상담 작업공간 <small>v2.1</small></h1>
-<p class="smallprint">지원자 단계와 상담 메모를 정리하는 로컬 작업공간입니다. 공용 PC에서 사용하지 마세요.</p>
+<p class="smallprint" id="workspaceDescription">지원자 단계와 상담 메모를 정리하는 로컬 작업공간입니다. 공용 PC에서 사용하지 마세요.</p>
 <div id="notice" role="status" class="banner" hidden></div>
   <!-- ===== CRM VIEW ===== -->
   <section class="view on" id="view-crm">
@@ -66,6 +67,19 @@
     <div id="recruitDiscovery" class="stats recruitStats discoveryStats"></div>
     <div id="recruitCampaigns" class="mgrid"></div>
     <p class="smallprint">집계는 SMTP 접수·실패·억제·추적 이벤트를 구분합니다. SMTP 접수는 최종 전달·열람을 뜻하지 않습니다.</p>
+  </section>
+
+  <!-- Authenticated signature workspace. Contract data stays in sign.varis.kr. -->
+  <section class="view" id="view-electronic" aria-labelledby="signHeading">
+    <div class="signHead">
+      <div><h2 id="signHeading">전자서명 통합관리</h2><p class="smallprint">문서 작성부터 서명 요청, 진행 상태, 완료본 보관까지 한곳에서 관리합니다.</p></div>
+      <div class="actions"><button class="btn" id="signList">문서 목록</button><button class="btn primary" id="signNew">새 문서</button><button class="btn" id="signRefresh">상태 새로고침</button><a class="btn" href="https://sign.varis.kr/dashboard" target="_blank" rel="noopener noreferrer">별도 창으로 열기</a></div>
+    </div>
+    <div id="signStatus" class="banner" role="status">전자서명 연결을 기다리는 중입니다.</div>
+    <div class="signFilters" id="signCounts" aria-label="전자서명 문서 상태"></div>
+    <p class="smallprint" id="signPrivacy">전자서명 직원 로그인 권한을 사용합니다. 계약서와 서명 정보는 CRM 브라우저 저장소나 백업 파일에 복사하지 않습니다. 상담 지원자 DB와 계약 상대방은 자동 연결되지 않습니다.</p>
+    <div class="signFrameWrap"><iframe id="signFrame" title="VARIS 전자서명 문서 관리" referrerpolicy="no-referrer" allow="clipboard-write 'src'" hidden></iframe></div>
+    <p class="smallprint signHelp">로그인이 필요하면 위 서명 화면에서 진행하세요. 이메일 링크는 별도 창에서 연 뒤 [문서 목록]을 누르세요. 상태 자동 갱신은 작성 중인 화면을 바꾸지 않습니다. 표시되지 않으면 [별도 창으로 열기]를 이용하세요. 문서 발송·무효화는 서명 화면에서 직접 검토 후 실행합니다.</p>
   </section>
 
   <!-- ===== MAIL VIEW ===== -->
@@ -109,6 +123,7 @@
 
 <div class="overlay" id="restoreOverlay"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="restoreTitle"><h2 id="restoreTitle">가져오기 미리보기</h2><p id="restoreSummary"></p><p class="banner" id="restoreWarning"></p><div class="modalft"><button class="btn" id="cancelImport">취소</button><button class="btn primary" id="applyImport">기존 값 보존하여 적용</button></div></div></div>
 <script src="/crm-core.js" defer></script>
+<script src="/signing.js" defer></script>
 <script src="/app.js" defer></script>
 </body>
 </html>

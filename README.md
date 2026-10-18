@@ -42,3 +42,9 @@ Before migrations, export JSON. Vercel rollback changes app assets only, not bro
 The production `/api/stats` returned HTTP 404. The broken manual-token fetch UI is replaced with an explicit unavailable state and links to existing dashboards. No email dispatch occurs here. Institution outreach remains on recipient-by-recipient `sender.py` only.
 
 See `UPDATE-STRATEGY.md` for server-auth/database migration gates. Do not claim collaboration readiness before authentication, authorization, RLS, migration and backup restore drills pass.
+
+## Electronic signature integration
+
+The 전자기능 tab embeds the authenticated sign.varis.kr document workspace. Existing signature staff permissions and RLS remain authoritative. GET https://sign.varis.kr/api/crm/status provides credentialed, no-store aggregate status counts; 401/errors are shown as unavailable, not zero. No API keys, contract data, signature tokens or login tokens are stored in CRM localStorage, exports or the public repository. Document creation, requests, reminders, invalidation and PDF downloads remain in the signature service and are initiated explicitly by the operator. Applicant records are not automatically matched to contract counterparties. CRM applicant storage is unchanged and remains browser-local.
+
+CSP permits frames and connections only to the exact signature origin. The signature app permits framing by crm.varis.kr. No public contract-data proxy is introduced.
