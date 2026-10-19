@@ -20,7 +20,8 @@
   <div class="wrap hd">
     <div class="logo"><span class="mk">◤◢</span> VARIS <small>CRM</small></div>
     <div class="nav">
-      <button data-view="crm" class="on">지원자 관리</button>
+      <button data-view="server" class="on">자동 접수 CRM</button>
+      <button data-view="crm">로컬 기록</button>
       <button data-view="mail">메일 현황</button>
       <button data-view="recruitment">모집 자동화</button>
       <button data-view="electronic">전자기능</button>
@@ -38,11 +39,17 @@
 </header>
 
 <main class="wrap" id="workspace">
-<h1 class="pageTitle">상담 작업공간 <small>v2.1</small></h1>
-<p class="smallprint" id="workspaceDescription">지원자 단계와 상담 메모를 정리하는 로컬 작업공간입니다. 공용 PC에서 사용하지 마세요.</p>
+<h1 class="pageTitle">서버 상담 CRM</h1>
+<p class="smallprint" id="workspaceDescription">새 접수는 인증된 서버에 저장합니다. 기존 브라우저 기록은 로컬 기록 탭에 별도로 보존합니다.</p>
 <div id="notice" role="status" class="banner" hidden></div>
   <!-- ===== CRM VIEW ===== -->
-  <section class="view on" id="view-crm">
+  <section class="view" id="view-server" aria-labelledby="serverHeading">
+    <div class="signHead"><div><h2 id="serverHeading">폼 접수 · 요청 범위 내 후속 안내</h2><p class="smallprint">접수 저장, 이메일 본인확인, 담당자 적격 검토, 지원·등록을 구분합니다. 자료 요청과 QA는 상담 후보로 계산하지 않습니다.</p></div><div class="actions"><button class="btn" id="serverRefresh">서버 화면 새로고침</button><a class="btn primary" href="https://sign.varis.kr/crm" target="_blank" rel="noopener noreferrer">서버 CRM 별도 창</a></div></div>
+    <p class="banner">직원 로그인이 필요한 공용 CRM입니다. 기존 로컬 기록은 자동 이관하거나 연락 대상으로 사용하지 않습니다.</p>
+    <div class="signFrameWrap"><iframe id="serverFrame" title="인증된 서버 상담 CRM" referrerpolicy="no-referrer" hidden></iframe></div>
+    <p class="smallprint">작성 중인 메모는 먼저 저장하세요. 로그인이 필요하면 별도 창에서 로그인한 뒤 새로고침하세요. SMTP 접수는 수신함 도착을 뜻하지 않습니다.</p>
+  </section>
+  <section class="view" id="view-crm">
     <div class="backupbar" id="backupBar"></div>
     <div class="stats" id="stats"></div>
     <div class="toolbar">
@@ -124,6 +131,7 @@
 <div class="overlay" id="restoreOverlay"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="restoreTitle"><h2 id="restoreTitle">가져오기 미리보기</h2><p id="restoreSummary"></p><p class="banner" id="restoreWarning"></p><div class="modalft"><button class="btn" id="cancelImport">취소</button><button class="btn primary" id="applyImport">기존 값 보존하여 적용</button></div></div></div>
 <script src="/crm-core.js" defer></script>
 <script src="/signing.js" defer></script>
+<script src="/server-crm.js" defer></script>
 <script src="/app.js" defer></script>
 </body>
 </html>
